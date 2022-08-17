@@ -1,18 +1,27 @@
 package gui;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
 import application.Main;
+import gui.util.Alerts;
+import gui.util.Utils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.Pane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.entities.Department;
 import model.services.DepartmentService;
@@ -38,8 +47,9 @@ public class DepartmentListController implements Initializable {
 	private ObservableList<Department> obsList;
 	
 	@FXML
-	public void onBtNewAction() {
-		System.out.println("OnBTNEWACTION");
+	public void onBtNewAction(ActionEvent event) {
+		Stage parentStage = Utils.currentStage(event);
+		createDialogForm("/gui/DepartmentForm.fxml", parentStage);
 	}
 		
 	
@@ -70,8 +80,31 @@ public class DepartmentListController implements Initializable {
 		}
 		List<Department> list = service.findAll();
 		obsList = FXCollections.observableArrayList(list);
-		tableViewDepartment.setItems(obsList);
-		
+		tableViewDepartment.setItems(obsList);		
+	}
+	
+	
+	//janela travada para preencher novo departamento
+	private void createDialogForm(String absoluteName, Stage parentStage) {
+		try {
+			
+			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
+			Pane pane = loader.load();
+			
+			//abrindo janela modal na frente da janela existente:
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("Enter Department data");
+			dialogStage.setScene(new Scene(pane));
+			dialogStage.setResizable(false); //janela nao pode ser redimensionada
+			dialogStage.initOwner(parentStage); //"pai" dessa janela
+			dialogStage.initModality(Modality.WINDOW_MODAL); //janela fica travada sem acessar a anterior, sem antes fechar esta
+			dialogStage.showAndWait();
+			
+			
+		}
+		catch(IOException e) {
+			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
+		}
 	}
 	
 }
